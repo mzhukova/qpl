@@ -35,7 +35,7 @@ auto main() -> int {
     std::unique_ptr<uint8_t[]> job_buffer;
     qpl_status                 status;
     uint32_t                   size = 0;
-    qpl_histogram              deflate_histogram{};
+    qpl_histogram              deflate_histogram{}; 
 
     // Job initialization
     status = qpl_get_job_size(execution_path, &size);
