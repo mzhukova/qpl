@@ -1,0 +1,48 @@
+# ==========================================================================
+# Copyright (C) 2022 Intel Corporation
+#
+# SPDX-License-Identifier: MIT
+# ==========================================================================
+
+name: Build and Run lightweight testing
+
+on:
+  pull_request:
+    branches: [develop]
+
+env:
+  # (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+strategy:
+  matrix:
+    clang:
+      CC: clang
+      CXX: clang++
+    gcc:
+      CC: gcc
+      CXX: g++
+
+jobs:
+  build:
+    # Ubuntu 20.04 or higher, as GNU >= 8.2 is required
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    # Install nasm and configure
+    - name: Configure
+      script: |
+          if [ "$(CC)" == "clang" ]; then
+            .github/workflows/env/clang.sh
+          fi
+      script: .github/workflows/env/nasm.sh
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/installation
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --target install
+
+    - name: Test
+      run: ./${{github.workspace}}/installation/bin/tests --dataset=${{github.workspace}}/tools/testdata/
+
