@@ -57,7 +57,9 @@ jobs:
 
     - name: Check on build failures
       if: steps.build.outcome != 'success'
-      run: exit 1
+      run: |
+        echo "Build step failed"
+        exit 1
 
     - name: Algorithmic tests
       id: ta_tests
@@ -86,4 +88,9 @@ jobs:
     - name: Check on test failures
       if: |
         steps.ta_tests.outcome != 'success' || steps.tb_tests.outcome != 'success' || steps.tn_tests.outcome != 'success' || steps.tt_tests.outcome != 'success'
-      run: exit 1
+      run: |
+        echo "Algorithmic tests status is $(steps.ta_tests.outcome)"
+        echo "Bad argument tests status is $(steps.tb_tests.outcome)"
+        echo "Negative tests status is $(steps.tn_tests.outcome)"
+        echo "Thread tests status is $(steps.tt_tests.outcome)"
+        exit 1
