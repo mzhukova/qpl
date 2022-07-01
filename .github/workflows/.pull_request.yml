@@ -89,8 +89,8 @@ jobs:
       if: |
         steps.ta_tests.outcome != 'success' || steps.tb_tests.outcome != 'success' || steps.tn_tests.outcome != 'success' || steps.tt_tests.outcome != 'success'
       run: |
-        echo "Algorithmic tests status is $(steps.ta_tests.outcome)"
-        echo "Bad argument tests status is $(steps.tb_tests.outcome)"
-        echo "Negative tests status is $(steps.tn_tests.outcome)"
-        echo "Thread tests status is $(steps.tt_tests.outcome)"
+        echo "Algorithmic tests status is ${{steps.ta_tests.outcome}}"
+        echo "Bad argument tests status is ${{steps.tb_tests.outcome}}"
+        echo "Negative tests status is ${{steps.tn_tests.outcome}}"
+        echo "Thread tests status is ${{steps.tt_tests.outcome}}"
         exit 1
