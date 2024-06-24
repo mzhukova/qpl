@@ -1,0 +1,87 @@
+# ==========================================================================
+# Copyright (C) 2022 Intel Corporation
+#
+# SPDX-License-Identifier: MIT
+# ==========================================================================
+
+name: win build and functional testing
+
+on:
+  pull_request:
+    branches: [ develop ]
+
+env:
+  # (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  ci:
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    # nmake
+    - name: Install Microsoft Build Tools
+      run: |
+        choco install microsoft-build-tools
+
+    # QPL requirements: nasm
+    - name: Install nasm
+      run: |
+        choco install nasm
+        echo "C:\Program Files\NASM" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Configure cmake
+      run: |
+        md build
+        cd build
+        cmake -DCMAKE_INSTALL_PREFIX=../installation -G "NMake Makefiles" ..
+
+    - name: Build
+      id: build
+      run: |
+        cd build
+        cmake --build . --target install
+
+    - name: Check on build failures
+      if: steps.build.outcome != 'success'
+      run: |
+        echo "Build step failed"
+        exit 1
+
+    - name: Algorithmic tests
+      id: ta_tests
+      continue-on-error: true
+      timeout-minutes: 60
+      run: ./installation/bin/tests --gtest_filter=ta_*  --dataset=tools/testdata/
+
+    - name: Bad argument tests
+      id: tb_tests
+      continue-on-error: true
+      timeout-minutes: 60
+      run: ./installation/bin/tests --gtest_filter=tb_*  --dataset=tools/testdata/
+
+    - name: Negative tests
+      id: tn_tests
+      continue-on-error: true
+      timeout-minutes: 60
+      run: ./installation/bin/tests --gtest_filter=tn_*  --dataset=tools/testdata/
+
+    - name: Thread tests
+      id: tt_tests
+      continue-on-error: true
+      timeout-minutes: 60
+      run: ./installation/bin/tests --gtest_filter=tt_*  --dataset=tools/testdata/
+
+    - name: Check on test failures
+      if: |
+        steps.ta_tests.outcome != 'success' || steps.tb_tests.outcome != 'success' || steps.tn_tests.outcome != 'success' || steps.tt_tests.outcome != 'success'
+      run: |
+        echo "Algorithmic tests status is ${{steps.ta_tests.outcome}}"
+        echo "Bad argument tests status is ${{steps.tb_tests.outcome}}"
+        echo "Negative tests status is ${{steps.tn_tests.outcome}}"
+        echo "Thread tests status is ${{steps.tt_tests.outcome}}"
+        exit 1
